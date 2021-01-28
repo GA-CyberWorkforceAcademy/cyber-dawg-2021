@@ -1,0 +1,1 @@
+image::drawings/cyber_dawg_2021.png[cyber_dawg,width="20%",height="20%",align="center"]
