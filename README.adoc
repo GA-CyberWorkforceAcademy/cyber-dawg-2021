@@ -1,1 +1,38 @@
-image::drawings/cyber_dawg_2021.png[cyber_dawg,width="20%",height="20%",align="center"]
+image::drawings/cyberdawg_logo.png[cyber_dawg_logo,align="center"]
+++++
+<h1 align="center">Cyber Dawg 2021</h1>
+    <h4 align="center">Range Deployment Resources</h4>
+++++
+
+---
+
+++++
+<p align="center">
+  <a href="#user-content-basic-overview">Overview</a> •
+  <a href="#user-content-usage">Usage</a> •
+  <a href="#user-content-features">Features</a> •
+  <a href="#user-content-contributing">Contributing</a> •
+  <a href="#user-content-author">Author</a> •
+  <a href="#user-content-license">License</a>
+</p>
+++++
+
+
+== Overview
+This repository contains the resources for deployment of the Cyber Dawg 2020 range.
+
+
+== Range Diagram
+
+
+image::drawings/cyber_dawg_2021.png[cyber_dawg,align="center"]
+
+
+== Author
+Alan Cantrell: alcantrell@augusta.edu +
+Nicole Cliff: acliff@augusta.edu
+
+
+
+== License
+image:https://img.shields.io/badge/License-Apache%202.0-blue.svg[link="https://www.apache.org/licenses/LICENSE-2.0.txt"]
