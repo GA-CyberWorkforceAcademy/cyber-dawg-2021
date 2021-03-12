@@ -357,11 +357,12 @@ resources:
 
             # ----- updates
             apt-get update -y
-            apt-get upgrade -y
+            #apt-get upgrade -y
 
+            echo "*** Installing PT ***"
             # ----- Packet Tracer Install
             mkdir /usr/share/packet_tracer
-            wget https://gitlab.com/ga-cyberworkforceacademy/cyber-dawg-2021/-/raw/master/range/GCC/resources/Cisco-PT-7.1.1x64.tar
+            wget https://gitlab.com/ga-cyberworkforceacademy/cyber-dawg-2021/-/raw/master/range/GCC/resources/Cisco-PT-7.1.1x64.tar?inline=false
             tar xvf Cisco-PT-7.1.1x64.tar
             rm install
 
