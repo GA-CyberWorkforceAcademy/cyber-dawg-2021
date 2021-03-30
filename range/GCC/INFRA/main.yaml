@@ -66,7 +66,6 @@ resources:
       public_network: { get_param: public_net }
       dns: { get_param: dns }
 
-
 outputs:
   ip_1:
     description: The public IP address to access VyOS.
