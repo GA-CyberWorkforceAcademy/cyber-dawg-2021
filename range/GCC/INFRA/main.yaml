@@ -1,0 +1,73 @@
+heat_template_version: 2018-03-02
+
+description: GCC Range Cyber Dawg 2021
+
+# -- Parameters used by all other config templates
+parameters:
+  flavor:
+    type: string
+    label: Flavor
+    description: Type of instance (flavor) to be used for the compute instance.
+    default: hack.c2.m4.d32
+
+  image:
+    type: string
+    label: Image name or ID
+    description: Image to be used for the server.
+    default: ubuntu2004-lxqt
+
+  username:
+    type: string
+    label: User Name
+    description: Sets the login username for the instances
+    default: user
+    hidden: false
+
+  user_pass:
+    type: string
+    label: Password
+    description: Sets the Login Password for the instances
+    default: gacyber
+    hidden: false
+
+  admin_user:
+    type: string
+    label: User Name
+    description: Sets the login username for admin users on instances
+    default: gacyberadmin
+    hidden: true
+
+  admin_pass:
+    type: string
+    label: Password
+    description: Set admin password for each host
+    default: lilcliff
+    hidden: true 
+
+  public_net:
+    type: string
+    label: Public network name or ID
+    description: Public network to attach server to.
+    default: public
+
+  dns:
+    type: string
+    label: DNS
+    description: Set as '10.101.255.254'
+    default: 10.101.255.254
+    hidden: true
+
+# -- Main Stack Resources
+resources:
+# -- Network for all instances
+  network:
+    type: NET::GCC::GCC_GTA_NET
+    properties:
+      public_network: { get_param: public_net }
+      dns: { get_param: dns }
+
+
+outputs:
+  ip_1:
+    description: The public IP address to access VyOS.
+    value: { get_attr: [floating_ip_1, ip] }

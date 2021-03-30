@@ -1,0 +1,125 @@
+heat_template_version: 2018-03-02
+
+description: GCC Range Cyber Dawg 2021
+
+# -- Parameters used by all other config templates
+parameters:
+  flavor:
+    type: string
+    label: Flavor
+    description: Type of instance (flavor) to be used for the compute instance.
+    default: hack.c4.m8.d32
+
+  image:
+    type: string
+    label: Image name or ID
+    description: Image to be used for the server.
+    default: vyos-1.1.7
+
+  username:
+    type: string
+    label: User Name
+    description: Sets the login username for the instances
+    default: user
+    hidden: false
+
+  user_pass:
+    type: string
+    label: Password
+    description: Sets the Login Password for the instances
+    default: gacyber
+    hidden: false
+
+  admin_user:
+    type: string
+    label: User Name
+    description: Sets the login username for admin users on instances
+    default: gacyberadmin
+    hidden: true
+
+  admin_pass:
+    type: string
+    label: Password
+    description: Set admin password for each host
+    default: lilcliff
+    hidden: true 
+
+  public_network:
+    type: string
+    label: Public network name or ID
+    description: Public network with floating IP addresses.
+    default: 'public'
+
+  dns:
+    type: string
+    label: DNS
+    description: Set as '10.101.255.254'
+    default: 10.101.255.254
+    hidden: true
+
+resources:
+
+#[6] ----- GCC Vyos Router Configuration Start ----- #
+  gcc_vyos_port:
+    type: OS::Neutron::Port
+    description: GCC Internet IP
+    properties:
+      name:
+        str_replace:
+          template: gcc_vyos_port_RAND
+          params:
+            RAND: { get_resource: rand_string }
+      network: public
+      port_security_enabled: false
+
+  analyst_port:
+    type: OS::Neutron::Port
+    description: Analyst IP
+    properties:
+      name:
+        str_replace:
+          template: analyst_port_RAND
+          params:
+            RAND: { get_resource: rand_string }
+      network_id: { get_resource: analyst_network }
+      fixed_ips:
+      - ip_address: 10.220.0.253
+      port_security_enabled: false
+
+  analyst_float_ip:
+    type: OS::Neutron::FloatingIP
+    description: Analyst Floating IP
+    depends_on: gcc_neutron_router
+    properties: { floating_network: public }
+
+  analyst_float_ip_assoc:
+    type: OS::Neutron::FloatingIPAssociation
+    depends_on: internet_net_interface
+    properties:
+      port_id: { get_resource: analyst_port }
+      floatingip_id: { get_resource: analyst_float_ip }
+      
+  gcc_vyos_rtr:
+    depends_on: [ gcc_neutron_router ]
+    type: OS::Nova::Server
+    properties:
+      name:
+        str_replace:
+          template: gcc_rtr_RAND
+          params:
+            RAND: { get_resource: rand_string }
+      image: vyos-1.1.7
+      flavor: hack.c2.m4.d32
+      diskConfig: AUTO
+      networks:
+        - port: { get_resource: gcc_vyos_port }
+        - port: { get_resource: analyst_port }
+      config_drive: true
+      user_data_format: RAW
+      user_data:
+        str_replace:
+          template: { get_file: https://gitlab.com/ga-cyberworkforceacademy/cyber-dawg-2021/-/raw/master/range/GCC/HOSTS/user_scripts/vyos.sh }
+          params:
+            $userpass: { get_param: user_pass }
+            $adminpass: { get_param: admin_pass }
+# ----- GCC Vyos Router Configuration End ----- #

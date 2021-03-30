@@ -1,0 +1,87 @@
+heat_template_version: 2018-03-02
+
+description: Private network shared by GTA users on the GCC Range
+
+parameters:
+  public_network:
+    type: string
+    label: Public network name or ID
+    description: Public network with floating IP addresses.
+    default: 'public'
+
+  cidr:
+    type: string
+    label: CIDR
+    description: The CIDR of the private network.
+    default: '10.220.0.0/24'
+
+  dns:
+    type: string
+    label: DNS
+    description: Set as '10.101.255.254'
+    default: 10.101.255.254
+    hidden: false
+
+resources:
+  rand_string:
+    type: OS::Heat::RandomString
+    properties:
+      length: 4
+
+# ----- GCC GTA Network Configuration Start ----- #
+  gcc_gta_net:
+    type: OS::Neutron::Net
+    properties:
+      name:
+        str_replace:
+          template: gcc_gta_net_RAND
+          params:
+            RAND: { get_resource: rand_string }
+      admin_state_up: true
+      shared: true
+
+  gcc_gta_subnet:
+    type: OS::Neutron::Subnet
+    depends_on: gcc_gta_net
+    properties:
+      name:
+        str_replace:
+          template: gcc_gta_subnet_RAND
+          params:
+            RAND: { get_resource: rand_string }
+      network: { get_resource: gcc_gta_net } 
+      cidr: { get_param: cidr }
+      dns_nameservers: [{ get_param: dns }]
+      gateway_ip:  10.220.0.254
+      enable_dhcp: true
+      host_routes: []
+      ip_version: 4
+# ----- GCC GTA Network Configuration End ----- #
+
+# ----- GCC GTA Neutron Router Configuration Start ----- #
+  gcc_neutron_router:
+    type: OS::Neutron::Router
+    properties:
+      external_gateway_info:
+        network: { get_param: public_network}
+
+  gcc_gta_interface:
+    type: OS::Neutron::RouterInterface
+    properties:
+      router: { get_resource: gcc_neutron_router }
+      subnet: { get_resource: gcc_gta_subnet }
+    
+  gcc_gta_static_route-0:
+    type: OS::Neutron::ExtraRoute
+    depends_on: [ gcc_neutron_router ]
+    properties:
+      router_id: { get_resource: gcc_neutron_router }
+      destination: 10.220.0.0/24
+      nexthop: 10.220.0.253
+# ----- GCC GTA Neutron Router Configuration End----- #
+
+outputs:
+  name:
+    description: GCC GTA Network
+    value: { get_attr: [gcc_gta_net, name] }
+
