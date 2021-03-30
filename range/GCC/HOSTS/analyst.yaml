@@ -1,0 +1,113 @@
+heat_template_version: 2018-03-02
+
+description: GCC Range Cyber Dawg 2021
+
+# -- Parameters used by all other config templates
+parameters:
+  flavor:
+    type: string
+    label: Flavor
+    description: Type of instance (flavor) to be used for the compute instance.
+    default: hack.c2.m4.d32
+
+  image:
+    type: string
+    label: Image name or ID
+    description: Image to be used for the server.
+    default: ubuntu2004-lxqt
+
+  username:
+    type: string
+    label: User Name
+    description: Sets the login username for the instances
+    default: user
+    hidden: false
+
+  user_pass:
+    type: string
+    label: Password
+    description: Sets the Login Password for the instances
+    default: gacyber
+    hidden: false
+
+  admin_user:
+    type: string
+    label: User Name
+    description: Sets the login username for admin users on instances
+    default: gacyberadmin
+    hidden: true
+
+  admin_pass:
+    type: string
+    label: Password
+    description: Set admin password for each host
+    default: lilcliff
+    hidden: true 
+
+  public_net:
+    type: string
+    label: Public network name or ID
+    description: Public network with floating IP addresses.
+    default: 'public'
+
+  dns:
+    type: string
+    label: DNS
+    description: Set as '10.101.255.254'
+    default: 10.101.255.254
+    hidden: true
+
+resources:
+  rand_string:
+    type: OS::Heat::RandomString
+    properties:
+      length: 4
+
+# ----- Analyst Workstation Configuration Start ----- #
+  analyst_workstation_port:
+    type: OS::Neutron::Port
+    description: Analyst IP
+    properties:
+      name:
+        str_replace:
+          template: analyst_workstation_port_RAND
+          params:
+            RAND: { get_resource: rand_string }
+      network: { get_resource: gcc_gta_net }
+      port_security_enabled: false
+    
+  analyst_workstation:
+      type: OS::Nova::Server
+      properties:
+        name:
+          str_replace:
+            template: analyst_workstation_RAND
+            params:
+              RAND: { get_resource: rand_string }
+        image: { get_param: image }
+        flavor: { get_param: flavor }
+        networks:
+          - port: { get_resource: analyst_workstation_port }
+        diskConfig: AUTO
+        config_drive: true
+        availability_zone: nova
+        #user_data_format: RAW
+        user_data:
+          str_replace:
+            template: { get_resource: https://gitlab.com/ga-cyberworkforceacademy/cyber-dawg-2021/-/raw/master/range/GCC/HOSTS/user_scripts/analyst.sh }
+            params:
+              $user: { get_param: username }
+              $pass: { get_param: user_pass }
+              $domain: { get_param: domain }
+# ----- Analyst Workstation Configuration End ----- #
+
+outputs:
+  name:
+    description: Name of the Linux Ops Station.
+    value: { get_attr: [analyst_workstation, name] }
+  ip:
+    description: The IP address of the analyst workstation.
+    value: { get_attr: [analyst, first_address] }
+  port:
+    description: The network port of the analyst workstation.
+    value: { get_resource: analyst_workstation_port }
