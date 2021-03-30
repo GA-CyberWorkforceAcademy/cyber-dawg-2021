@@ -90,7 +90,6 @@ resources:
           - port: { get_resource: analyst_workstation_port }
         diskConfig: AUTO
         config_drive: true
-        availability_zone: nova
         user_data_format: RAW
         user_data:
           str_replace:
