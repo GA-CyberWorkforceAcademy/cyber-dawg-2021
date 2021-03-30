@@ -73,7 +73,7 @@ resources:
           template: analyst_workstation_port_RAND
           params:
             RAND: { get_resource: rand_string }
-      network: { get_resource: gcc_gta_net }
+      network_id: gcc_gta_net_ueHu
       port_security_enabled: false
     
   analyst_workstation:
