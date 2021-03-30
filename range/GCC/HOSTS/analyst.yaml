@@ -93,7 +93,7 @@ resources:
         user_data_format: RAW
         user_data:
           str_replace:
-            template: { get_file: https://gitlab.com/ga-cyberworkforceacademy/cyber-dawg-2021/-/raw/master/range/GCC/HOSTS/user_scripts/analyst.sh }
+            template: { get_file: "https://gitlab.com/ga-cyberworkforceacademy/cyber-dawg-2021/-/raw/master/range/GCC/HOSTS/user_scripts/analyst.sh" }
             params:
               $user: { get_param: username }
               $pass: { get_param: user_pass }
