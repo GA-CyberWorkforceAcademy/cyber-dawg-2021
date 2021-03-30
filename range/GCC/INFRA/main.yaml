@@ -61,7 +61,7 @@ parameters:
 resources:
 # -- Network for all instances
   network:
-    type: NET::GCC::GCC_GTA_NET
+    type: GCC::NET:GCC_GTA_NET
     properties:
       public_network: { get_param: public_net }
       dns: { get_param: dns }
