@@ -88,7 +88,7 @@ resources:
       network: { get_resource: gcc_gta_net } 
       cidr: { get_param: cidr }
       dns_nameservers: [{ get_param: dns }]
-      gateway_ip:  10.220.0.254
+      gateway_ip:  10.220.0.253
       enable_dhcp: true
       host_routes: []
       ip_version: 4
