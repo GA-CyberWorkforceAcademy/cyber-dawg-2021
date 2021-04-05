@@ -1,4 +1,8 @@
 #!/bin/bash
+
+# ----- Change default gateway to vyos router
+ip route add default via 10.220.0.253
+
 # ----- CREATES USER GROUPS
 echo "root:$pass" | chpasswd
 useradd -m -U -s /bin/bash $user
@@ -13,18 +17,13 @@ sed -i '/# %wheel        ALL=(ALL)       NOPASSWD: ALL/ c\%wheel        ALL=(ALL
 sed -i '/#Port 22/ c\Port 22' /etc/ssh/sshd_config
 sed -i '/#AllowTcpForwarding yes/AllowTcpForwarding yes/' /etc/ssh/sshd_config
 service sshd restart
-# ----- CREATES USER GROUPS
-echo "root:$pass" | chpasswd
-useradd -m -U -s /bin/bash $user
-usermod -aG sudo $user
-echo "$user:$pass" | chpasswd
 # ----- updates
 apt-get update -y
-#apt-get upgrade -y
+apt-get upgrade -y
 echo "*** Installing PT ***"
 # ----- Packet Tracer Install
 mkdir /usr/share/packet_tracer
-wget https://gitlab.com/ga-cyberworkforceacademy/cyber-dawg-2021/-/raw/master/range/GCC/resources/Cisco-PT-7.1.1x64.tar
+wget "https://gitlab.com/ga-cyberworkforceacademy/cyber-dawg-2021/-/raw/master/range/GCC/resources/Cisco-PT-7.1.1x64.tar?inline=false"
 tar xvf Cisco-PT-7.1.1x64.tar
 rm install
 cat <<EOF > install.sh

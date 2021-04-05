@@ -73,8 +73,8 @@ resources:
           template: analyst_workstation_port_RAND
           params:
             RAND: { get_resource: rand_string }
-      network_id: gcc_gta_net_ueHu
-      port_security_enabled: false
+      network_id: gcc_gta_net
+      #port_security_enabled: false
     
   analyst_workstation:
       type: OS::Nova::Server
@@ -93,7 +93,7 @@ resources:
         user_data_format: RAW
         user_data:
           str_replace:
-            template: { get_file: "https://gitlab.com/ga-cyberworkforceacademy/cyber-dawg-2021/-/raw/master/range/GCC/HOSTS/user_scripts/analyst.sh" }
+            template: { get_file: "https://gitlab.com/ga-cyberworkforceacademy/cyber-dawg-2021/-/raw/master/range/GCC/HOSTS/analyst.yaml" }
             params:
               $user: { get_param: username }
               $pass: { get_param: user_pass }
@@ -104,9 +104,6 @@ outputs:
   name:
     description: Name of the Linux Ops Station.
     value: { get_attr: [analyst_workstation, name] }
-  ip:
-    description: The IP address of the analyst workstation.
-    value: { get_attr: [analyst, first_address] }
   port:
     description: The network port of the analyst workstation.
     value: { get_resource: analyst_workstation_port }

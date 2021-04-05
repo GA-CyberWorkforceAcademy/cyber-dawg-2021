@@ -22,6 +22,46 @@ parameters:
     default: 10.101.255.254
     hidden: false
 
+  flavor:
+    type: string
+    label: Flavor
+    description: Type of instance (flavor) to be used for the compute instance.
+    default: hack.c4.m8.d32
+
+  image:
+    type: string
+    label: Image name or ID
+    description: Image to be used for the server.
+    default: vyos-1.1.7
+
+  username:
+    type: string
+    label: User Name
+    description: Sets the login username for the instances
+    default: user
+    hidden: false
+
+  user_pass:
+    type: string
+    label: Password
+    description: Sets the Login Password for the instances
+    default: gacyber
+    hidden: false
+
+  admin_user:
+    type: string
+    label: User Name
+    description: Sets the login username for admin users on instances
+    default: gacyberadmin
+    hidden: true
+
+  admin_pass:
+    type: string
+    label: Password
+    description: Set admin password for each host
+    default: lilcliff
+    hidden: true 
+
 resources:
   rand_string:
     type: OS::Heat::RandomString
@@ -32,11 +72,7 @@ resources:
   gcc_gta_net:
     type: OS::Neutron::Net
     properties:
-      name:
-        str_replace:
-          template: gcc_gta_net_RAND
-          params:
-            RAND: { get_resource: rand_string }
+      name: gcc_gta_net
       admin_state_up: true
       shared: true
 
@@ -59,26 +95,124 @@ resources:
 # ----- GCC GTA Network Configuration End ----- #
 
 # ----- GCC GTA Neutron Router Configuration Start ----- #
-  gcc_neutron_router:
-    type: OS::Neutron::Router
-    properties:
-      external_gateway_info:
-        network: { get_param: public_network}
+  # gcc_neutron_router:
+  #   type: OS::Neutron::Router
+  #   properties:
+  #     external_gateway_info:
+  #       network: { get_param: public_network}
 
-  gcc_gta_interface:
-    type: OS::Neutron::RouterInterface
-    properties:
-      router: { get_resource: gcc_neutron_router }
-      subnet: { get_resource: gcc_gta_subnet }
+  # gcc_gta_interface:
+  #   type: OS::Neutron::RouterInterface
+  #   properties:
+  #     router: { get_resource: gcc_neutron_router }
+  #     subnet: { get_resource: gcc_gta_subnet }
     
-  gcc_gta_static_route-0:
-    type: OS::Neutron::ExtraRoute
-    depends_on: [ gcc_neutron_router ]
-    properties:
-      router_id: { get_resource: gcc_neutron_router }
-      destination: 10.220.0.0/24
-      nexthop: 10.220.0.253
+  # gcc_gta_static_route-0:
+  #   type: OS::Neutron::ExtraRoute
+  #   depends_on: [ gcc_neutron_router ]
+  #   properties:
+  #     router_id: { get_resource: gcc_neutron_router }
+  #     destination: 10.220.0.0/24
+  #     nexthop: 10.220.0.253
 # ----- GCC GTA Neutron Router Configuration End----- #
+
+#[6] ----- GCC Vyos Router Configuration Start ----- #
+  gcc_vyos_port:
+    type: OS::Neutron::Port
+    description: GCC Internet IP
+    properties:
+      name:
+        str_replace:
+          template: gcc_vyos_public_RAND
+          params:
+            RAND: { get_resource: rand_string }
+      network: public
+      port_security_enabled: false
+
+  analyst_port:
+    type: OS::Neutron::Port
+    description: Analyst IP
+    properties:
+      name:
+        str_replace:
+          template: analyst_vyos_port_RAND
+          params:
+            RAND: { get_resource: rand_string }
+      network_id: { get_resource: gcc_gta_net }
+      fixed_ips:
+      - ip_address: 10.220.0.253
+      port_security_enabled: false
+    
+  gcc_vyos_rtr:
+    type: OS::Nova::Server
+    properties:
+      name: gcc_vyos_rtr
+      image: vyos-1.1.7
+      flavor: { get_param: flavor }
+      diskConfig: AUTO
+      networks:
+        - port: { get_resource: gcc_vyos_port }
+        - port: { get_resource: analyst_port }
+      config_drive: true
+      user_data_format: RAW
+      user_data:
+        str_replace:
+          template: | #{ get_file: "https://pastebin.com/raw/X3B7AAjS" }
+            #!/bin/vbash
+            # Base OS Changes
+            source /opt/vyatta/etc/functions/script-template
+            configure
+
+            # System Properties
+            set system config-management commit-revisions '20'
+            set system console device ttyS0 speed '9600'
+            set system host-name 'gcc_vyos_rtr'
+            set system login user vyos authentication plaintext-password '$userpass'
+            set system login user root authentication plaintext-password '$adminpass'
+            set system login user root level 'admin'
+            set system package auto-sync '1'
+            set system package repository community components 'main'
+            set system package repository community distribution 'helium'
+            set system package repository community password ''
+            set system package repository community url 'http://packages.vyos.net/vyos'
+            set system package repository community username ''
+            set system syslog global facility all level 'notice'
+            set system syslog global facility protocols level 'debug'
+            set system time-zone 'UTC'
+
+            # Router Interfaces
+            set interfaces ethernet eth0 mtu 1450
+            set interfaces ethernet eth1 mtu 1450
+            set interfaces ethernet eth0 description INTERNET
+            set interfaces ethernet eth0 address dhcp
+            set interfaces ethernet eth1 description GCC_GTA_NET
+            set interfaces ethernet eth1 address 10.220.0.253/24
+            set interfaces loopback lo
+            set interfaces loopback lo address 10.100.0.1/32
+
+            # Nat rules for outbound traffic
+            set nat source rule 100 outbound-interface eth0
+            set nat source rule 100 'source'
+            set nat source rule 100 translation address masquerade
+
+            # System Services
+            set service ssh allow-root
+            set service ssh port 22
+
+            # Default Route to Internet
+            set protocols static route 0.0.0.0/0 next-hop 10.100.255.254 distance 1
+
+            commit
+            save
+            done
+
+            reboot
+          params:
+            $userpass: { get_param: user_pass }
+            $adminpass: { get_param: admin_pass }
+# ----- GCC Vyos Router Configuration End ----- #
+
+
 
 outputs:
   name:
