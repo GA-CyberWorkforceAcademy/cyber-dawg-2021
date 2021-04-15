@@ -119,7 +119,7 @@ resources:
               apt-get install dialog libgl1-mesa-glx libxcb-xinerama0-dev -y
               echo "*** Installing PT ***"
               # ----- Packet Tracer Install
-              wget "https://archive.org/download/packet-tracer-800-build-212-mac-notarized/PacketTracer_800_amd64_build212_final.deb" -o /home/user/Desktop/packet_tracer_install.deb
+              wget "https://archive.org/download/packet-tracer-800-build-212-mac-notarized/PacketTracer_800_amd64_build212_final.deb"
               #dpkg -i PacketTracer_800_amd64_build212_final.deb
               shutdown -r now
             params:
