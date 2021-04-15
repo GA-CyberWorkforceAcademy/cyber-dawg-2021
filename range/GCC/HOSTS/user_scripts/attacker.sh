@@ -1,10 +1,10 @@
 #!/bin/bash
 
 # ----- CREATES USER GROUPS
-echo "root:$pass" | chpasswd
+echo "root:$admin_pass" | chpasswd
 useradd -m -U -s /bin/bash $user
 usermod -aG sudo $user
-echo "$user:$userpass" | chpasswd
+echo "$user:$pass" | chpasswd
 
 echo "domain kinetic" > /etc/resolv.conf
 echo "search kinetic" >>/etc/resolv.conf
@@ -26,7 +26,8 @@ echo "$user:$pass" | chpasswd
 
 # ----- updates
 apt-get update -y
-apt-get upgrade -y
-modprobe -I psmouse
+apt-get xserver-xorg-input-synaptics
 
-reboot
+synclient tapbutton1=1
+
+shutdown -r now

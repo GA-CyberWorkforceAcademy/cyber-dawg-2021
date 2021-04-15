@@ -1,0 +1,146 @@
+heat_template_version: 2018-03-02
+
+description: GCC Range Cyber Dawg 2021
+
+# -- Parameters used by all other config templates
+parameters:
+  flavor:
+    type: string
+    label: Flavor
+    description: Type of instance (flavor) to be used for the compute instance.
+    default: hack.c2.m4.d32
+
+  image:
+    type: string
+    label: Image name or ID
+    description: Image to be used for the server.
+    default: debian10
+
+  username:
+    type: string
+    label: User Name
+    description: Sets the login username for the instances
+    default: user
+    hidden: false
+
+  user_pass:
+    type: string
+    label: Password
+    description: Sets the Login Password for the instances
+    default: gacyber
+    hidden: false
+
+  admin_user:
+    type: string
+    label: User Name
+    description: Sets the login username for admin users on instances
+    default: gacyberadmin
+    hidden: true
+
+  admin_pass:
+    type: string
+    label: Password
+    description: Set admin password for each host
+    default: lilcliff
+    hidden: true 
+
+  public_net:
+    type: string
+    label: Public network name or ID
+    description: Public network with floating IP addresses.
+    default: 'public'
+
+  dns:
+    type: string
+    label: DNS
+    description: Set as '10.101.255.254'
+    default: 10.101.255.254
+    hidden: true
+
+resources:
+  rand_string:
+    type: OS::Heat::RandomString
+    properties:
+      length: 4
+
+# ----- Attacker Workstation Configuration Start ----- #
+  attacker_workstation_port:
+    type: OS::Neutron::Port
+    description: Anttacker IP
+    properties:
+      name:
+        str_replace:
+          template: attacker_workstation_port_RAND
+          params:
+            RAND: { get_resource: rand_string }
+      network_id: gcc_gta_net
+      #port_security_enabled: false
+    
+  attacker_workstation:
+      type: OS::Nova::Server
+      properties:
+        name:
+          str_replace:
+            template: attacker_workstation_RAND
+            params:
+              RAND: { get_resource: rand_string }
+        image: { get_param: image }
+        flavor: { get_param: flavor }
+        networks:
+          - port: { get_resource: attacker_workstation_port }
+        diskConfig: AUTO
+        config_drive: true
+        user_data_format: RAW
+        user_data:
+          str_replace:
+            template: | #{ get_file: "https://gitlab.com/ga-cyberworkforceacademy/cyber-dawg-2021/-/raw/master/range/GCC/HOSTS/user_scripts/analyst.sh" }
+              #!/bin/bash
+
+
+              # ----- CREATES USER GROUPS
+              echo "root:$admin_pass" | chpasswd
+              useradd -m -U -s /bin/bash $user
+              usermod -aG sudo $user
+              echo "$user:$pass" | chpasswd
+
+              echo "domain kinetic" > /etc/resolv.conf
+              echo "search kinetic" >>/etc/resolv.conf
+              echo "nameserver $domain" >>/etc/resolv.conf
+
+              # ----- ENABLE SUDO NOPASSWD
+              sed -i '/# %wheel        ALL=(ALL)       NOPASSWD: ALL/ c\%wheel        ALL=(ALL)       NOPASSWD: ALL' /etc/sudoers
+
+              # ----- ENABLES SSH[8]in prohibit-password/ c\PermitRootLogin yes' /etc/ssh/sshd_config
+              #sed -i '/#Port 22/ c\Port 22' /etc/ssh/sshd_config
+              #sed -i '/#AllowTcpForwarding yes/AllowTcpForwarding yes/' /etc/ssh/sshd_config
+              #service sshd restart
+
+              # ----- CREATES USER GROUPS
+              echo "root:$pass" | chpasswd
+              useradd -m -U -s /bin/bash $user
+              usermod -aG sudo $user
+              echo "$user:$pass" | chpasswd
+
+              #apt-get -y update
+              #apt-get -y install gnupg 
+              #echo "deb https://http.kali.org/kali kali-rolling main non-free contrib" >> /etc/apt/sources.list
+              #wget -q -O - https://archive.kali.org/archive-key.asc  | apt-key add
+
+              #apt-get -y update
+              #DEBIAN_FRONTEND=noninteractive apt-get -y install kali-desktop-lxde kali-linux-large open-vm-tools             
+
+              shutdown -r now
+            params:
+              $user: { get_param: username }
+              $pass: { get_param: user_pass }
+              $admin_pass: { get_param: admin_pass }
+              $domain: { get_param: dns }
+# ----- Attacker Workstation Configuration End ----- #
+
+outputs:
+  name:
+    description: Name of the Attacker Workstation.
+    value: { get_attr: [attacker_workstation, name] }
+  port:
+    description: The network port of the attacker workstation.
+    value: { get_resource: attacker_workstation_port }
